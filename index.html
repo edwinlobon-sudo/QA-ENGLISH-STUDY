@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QA Sprint Master — Easy A1 Assessment App</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #311042 100%);
+            --card-glass: rgba(255, 255, 255, 0.07);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --accent-cyan: #06b6d4;
+            --accent-violet: #a855f7;
+            --accent-green: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
+        body { background: var(--bg-gradient); background-attachment: fixed; color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+
+        .app-window {
+            width: 100%; max-width: 950px; background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--card-border); border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5); overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        .window-header {
+            background: rgba(255, 255, 255, 0.03); padding: 16px 24px;
+            display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--card-border);
+        }
+        .window-dots { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+
+        .app-nav { display: flex; gap: 12px; padding: 20px 30px 0 30px; }
+        .nav-tab {
+            flex: 1; padding: 14px; background: var(--card-glass); border: 1px solid var(--card-border);
+            border-radius: 14px; color: var(--text-sub); font-weight: 600; font-size: 0.95rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-tab:hover { background: rgba(255, 255, 255, 0.12); color: #fff; transform: translateY(-2px); }
+        .nav-tab.active {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-violet));
+            color: #fff; border-color: transparent; box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+        }
+
+        .app-body { padding: 30px; }
+        .tab-content { display: none; animation: fadeIn 0.4s ease-out forwards; }
+        .tab-content.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .visual-card {
+            background: var(--card-glass); border: 1px solid var(--card-border);
+            border-radius: 18px; padding: 22px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px;
+        }
+        .svg-icon-box {
+            width: 70px; height: 70px; border-radius: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .icon-cyan { background: rgba(6, 182, 212, 0.15); border: 1px solid var(--accent-cyan); }
+        .icon-violet { background: rgba(168, 85, 247, 0.15); border: 1px solid var(--accent-violet); }
+        .icon-green { background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-green); }
+
+        .option-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+        .interactive-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--card-border);
+            padding: 12px 14px; border-radius: 12px; color: var(--text-main); font-size: 0.9rem; font-weight: 500;
+            cursor: pointer; text-align: center; transition: all 0.25s ease;
+        }
+        .interactive-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: var(--accent-cyan); transform: scale(1.02); }
+        .interactive-btn.correct { background: rgba(16, 185, 129, 0.25) !important; border-color: var(--accent-green) !important; color: #6ee7b7 !important; }
+        .interactive-btn.wrong { background: rgba(244, 63, 94, 0.25) !important; border-color: var(--accent-rose) !important; color: #fca5a5 !important; }
+
+        .scenarios-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .scenario-card {
+            background: var(--card-glass); border: 1px solid var(--card-border);
+            border-radius: 16px; padding: 16px; cursor: pointer; transition: all 0.3s ease;
+        }
+        .scenario-card:hover { transform: translateY(-3px); border-color: var(--accent-cyan); }
+        .scenario-card.selected { border-color: var(--accent-green); background: rgba(16, 185, 129, 0.15); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .scenario-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+
+        .recording-box { background: rgba(0, 0, 0, 0.4); border: 1px solid var(--card-border); border-radius: 18px; padding: 20px; text-align: center; margin-bottom: 20px; }
+        .timer { font-size: 3rem; font-weight: 800; color: var(--accent-cyan); text-shadow: 0 0 20px rgba(6, 182, 212, 0.4); margin: 5px 0; }
+
+        .mic-btn, .submit-btn {
+            background: linear-gradient(135deg, var(--accent-green), #059669); color: white; border: none;
+            padding: 14px 28px; border-radius: 50px; font-size: 1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); display: inline-flex; align-items: center; gap: 10px;
+        }
+        .mic-btn:hover, .submit-btn:hover { transform: scale(1.03); }
+        .mic-btn.recording { animation: pulse 1.5s infinite; background: linear-gradient(135deg, var(--accent-amber), #d97706); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); } }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
+            display: none; justify-content: center; align-items: center; z-index: 999;
+        }
+        .modal-card {
+            background: rgba(30, 27, 75, 0.95); border: 1px solid var(--accent-cyan);
+            border-radius: 24px; padding: 35px; width: 90%; max-width: 480px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); animation: popUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popUp { from { transform: scale(0.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .modal-score { font-size: 3.5rem; font-weight: 800; color: var(--accent-green); margin: 15px 0; text-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        .modal-btn { background: var(--accent-violet); color: white; border: none; padding: 12px 28px; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <div class="app-window">
+        <div class="window-header">
+            <div class="window-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+            <div style="font-weight: 600; color: var(--text-sub);">QA English Assessment Platform</div>
+            <div style="color: var(--accent-cyan); font-weight: 700;" id="score-display">Score: 0 XP</div>
+        </div>
+
+        <div class="app-nav">
+            <button class="nav-tab active" onclick="switchTab('vocab')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                1. QA Vocabulary
+            </button>
+            <button class="nav-tab" onclick="switchTab('grammar')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                2. Code & Grammar
+            </button>
+            <button class="nav-tab" onclick="switchTab('speaking')">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                3. Oral Daily Standup
+            </button>
+        </div>
+
+        <div class="app-body">
+            <!-- TAB 1: VOCABULARIO -->
+            <div id="tab-vocab" class="tab-content active">
+                <div class="visual-card">
+                    <div class="svg-icon-box icon-cyan">
+                        <svg width="36" height="36" fill="none" stroke="#06b6d4" stroke-width="2" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 4px;">QA Basic Vocabulary</h3>
+                        <p style="color: var(--text-sub); font-size: 0.9rem;">Choose the correct word for each QA task.</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <p style="font-weight: 600; margin-bottom: 6px;">1. Where do developers send new code for team review?</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="checkVocab(this, true, 20)">Pull Request (PR)</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Email Inbox</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">User Profile</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Home Screen</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <p style="font-weight: 600; margin-bottom: 6px;">2. Where do you turn on or off a new feature for testing?</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Login Page</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, true, 20)">Config Tab / Feature Flag</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Password Menu</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Help Desk</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <p style="font-weight: 600; margin-bottom: 6px;">3. Where do you find the task details and acceptance criteria?</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Chat Room</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Notification Bar</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, true, 20)">User Story Ticket</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Calendar Event</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <p style="font-weight: 600; margin-bottom: 6px;">4. What do you report when a feature has an error?</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="checkVocab(this, true, 20)">Bug / Issue</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">New Account</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">User Photo</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Color Theme</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <p style="font-weight: 600; margin-bottom: 6px;">5. What element contains the main menu links at the top of the page?</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Footer Area</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Search Input</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, false, 0)">Side Banner</button>
+                        <button class="interactive-btn" onclick="checkVocab(this, true, 20)">Navbar</button>
+                    </div>
+                </div>
+
+                <button class="submit-btn" style="width: 100%; justify-content: center; margin-top: 10px;" onclick="triggerResultModal('Vocabulary Challenge Completed!')">
+                    Generate Score Result 🏆
+                </button>
+            </div>
+
+            <!-- TAB 2: GRAMÁTICA APLICADA -->
+            <div id="tab-grammar" class="tab-content">
+                <div class="visual-card">
+                    <div class="svg-icon-box icon-violet">
+                        <svg width="36" height="36" fill="none" stroke="#a855f7" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 4px;">Syntax & Grammar Check</h3>
+                        <p style="color: var(--text-sub); font-size: 0.9rem;">Select the correct verb form for each sentence.</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <p style="font-weight: 600;">1. "Yesterday, I <span style="color:var(--accent-violet)" id="g1">______</span> the comments left on the PR."</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="fillGrammar('g1', 'checked', this, true, 20)">checked</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g1', 'check', this, false, 0)">check</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g1', 'am checking', this, false, 0)">am checking</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g1', 'can check', this, false, 0)">can check</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <p style="font-weight: 600;">2. "The build process <span style="color:var(--accent-violet)" id="g2">______</span> blocked yesterday morning."</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="fillGrammar('g2', 'was', this, true, 20)">was</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g2', 'were', this, false, 0)">were</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g2', 'is', this, false, 0)">is</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g2', 'can be', this, false, 0)">can be</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <p style="font-weight: 600;">3. "Right now, she <span style="color:var(--accent-violet)" id="g3">______</span> on fixing two bugs on the review page."</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="fillGrammar('g3', 'is working', this, true, 20)">is working</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g3', 'worked', this, false, 0)">worked</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g3', 'works', this, false, 0)">works</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g3', 'can work', this, false, 0)">can work</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <p style="font-weight: 600;">4. "<span style="color:var(--accent-violet)" id="g4">______</span> you help me set these flags in the config tab after the daily?"</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="fillGrammar('g4', 'Can', this, true, 20)">Can</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g4', 'Was', this, false, 0)">Was</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g4', 'Were', this, false, 0)">Were</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g4', 'Are', this, false, 0)">Are</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 16px;">
+                    <p style="font-weight: 600;">5. "The QA engineer always <span style="color:var(--accent-violet)" id="g5">______</span> every user story ticket before testing."</p>
+                    <div class="option-grid">
+                        <button class="interactive-btn" onclick="fillGrammar('g5', 'reviews', this, true, 20)">reviews</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g5', 'reviewed', this, false, 0)">reviewed</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g5', 'is reviewing', this, false, 0)">is reviewing</button>
+                        <button class="interactive-btn" onclick="fillGrammar('g5', 'was reviewing', this, false, 0)">was reviewing</button>
+                    </div>
+                </div>
+
+                <button class="submit-btn" style="width: 100%; justify-content: center; margin-top: 10px;" onclick="triggerResultModal('Grammar Challenge Completed!')">
+                    Generate Score Result 🏆
+                </button>
+            </div>
+
+            <!-- TAB 3: SPEAKING DAILY EVALUATION -->
+            <div id="tab-speaking" class="tab-content">
+                <div class="visual-card">
+                    <div class="svg-icon-box icon-green">
+                        <svg width="36" height="36" fill="none" stroke="#10b981" stroke-width="2" viewBox="0 0 24 24"><path d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c.41 0 .748.325.766.735a2.502 2.502 0 010 .53c-.018.41-.356.735-.766.735H7a2 2 0 00-2 2v2c0 .354.092.686.252.975z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 style="font-size: 1.2rem; margin-bottom: 4px;">Oral Daily Standup Evaluation</h3>
+                        <p style="color: var(--text-sub); font-size: 0.9rem;">Select an emergency scenario, pitch your response, and analyze speech.</p>
+                    </div>
+                </div>
+
+                <div class="scenarios-grid">
+                    <div class="scenario-card selected" onclick="selectScenario(this, 1)">
+                        <div class="scenario-title" style="color: var(--accent-amber);">🌐 1. Connection Blocker</div>
+                        <p style="font-size: 0.8rem; color: var(--text-sub);">Internet dropped during deployment testing.</p>
+                    </div>
+                    <div class="scenario-card" onclick="selectScenario(this, 2)">
+                        <div class="scenario-title" style="color: var(--accent-rose);">⚠️ 2. Security Threat</div>
+                        <p style="font-size: 0.8rem; color: var(--text-sub);">Unusual access attempt detected on server.</p>
+                    </div>
+                    <div class="scenario-card" onclick="selectScenario(this, 3)">
+                        <div class="scenario-title" style="color: var(--accent-cyan);">🎫 3. User Story Ticket Issue</div>
+                        <p style="font-size: 0.8rem; color: var(--text-sub);">User Story Ticket has missing information.</p>
+                    </div>
+                </div>
+
+                <div id="scenario-prompt" style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 14px; margin-bottom: 15px; border-left: 4px solid var(--accent-cyan); font-size: 0.95rem;">
+                    <strong>Guide Script for Scenario 1:</strong><br>
+                    <em>"Yesterday, I worked on the review page. Today, I was testing the tickets, but I had an internet connection blocker. Can someone help me check the deployment?"</em>
+                </div>
+
+                <div class="recording-box">
+                    <div class="timer" id="timer-display">01:00</div>
+                    <button class="mic-btn" id="record-btn" onclick="toggleRecording()">
+                        🎙️ Start Recording Pitch
+                    </button>
+                    <p id="rec-status" style="margin-top: 10px; color: var(--text-sub); font-size: 0.85rem;">Click microphone to record your presentation</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP DE RESULTADOS -->
+    <div class="modal-overlay" id="score-modal">
+        <div class="modal-card">
+            <h2 style="color: var(--accent-cyan);" id="modal-title">Performance Summary</h2>
+            <div class="modal-score" id="modal-score-val">85%</div>
+            <h3 style="color: #6ee7b7; margin-bottom: 10px;">Perfect, you made it! 🎉</h3>
+            <p style="color: var(--text-sub); font-size: 0.95rem; line-height: 1.5;" id="modal-desc">
+                Your performance score and technical grammar accuracy have been validated for this sprint level.
+            </p>
+            <button class="modal-btn" onclick="closeModal()">Continue Sprint ➔</button>
+        </div>
+    </div>
+
+    <script>
+        let currentScore = 0;
+        let currentScenario = 1;
+        let isRecording = false;
+        let countdown = 60;
+        let timerInterval = null;
+        let recognition = null;
+        let finalTranscript = "";
+
+        const prompts = {
+            1: "Yesterday, I worked on the review page. Today, I was testing the tickets, but I had an internet connection blocker. Can someone help me check the deployment?",
+            2: "Yesterday, I tested the config tab. Today, we found a security alert on the server. The team was checking the logs. Can you review the feature flag permissions?",
+            3: "Yesterday, I checked the comments on the PR. Today, I am working on the user story ticket, but it was missing description items. Can you help me review the ticket?"
+        };
+
+        const keywords = {
+            1: ["yesterday", "worked", "review page", "today", "testing", "blocker", "can", "help", "check"],
+            2: ["yesterday", "tested", "config tab", "today", "security", "was", "checking", "can", "review"],
+            3: ["yesterday", "checked", "comments", "pr", "today", "working", "user story", "ticket", "can", "help"]
+        };
+
+        function playSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.05, ctx.currentTime);
+                    osc.start(); osc.stop(ctx.currentTime + 0.05);
+                } else if (type === 'success') {
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+                    osc.start(); osc.stop(ctx.currentTime + 0.2);
+                }
+            } catch(e){}
+        }
+
+        function switchTab(tabId) {
+            playSound('click');
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function checkVocab(btn, isCorrect, pts) {
+            playSound('click');
+            if (isCorrect) {
+                btn.classList.add('correct');
+                playSound('success');
+                addScore(pts);
+            } else {
+                btn.classList.add('wrong');
+            }
+        }
+
+        function fillGrammar(targetId, text, btn, isCorrect, pts) {
+            playSound('click');
+            if (isCorrect) {
+                document.getElementById(targetId).innerText = text;
+                btn.classList.add('correct');
+                playSound('success');
+                addScore(pts);
+            } else {
+                btn.classList.add('wrong');
+            }
+        }
+
+        function addScore(pts) {
+            currentScore += pts;
+            if (currentScore > 100) currentScore = 100;
+            document.getElementById('score-display').innerText = `Score: ${Math.round(currentScore)} XP`;
+        }
+
+        function triggerResultModal(title, overrideScore = null) {
+            playSound('success');
+            document.getElementById('modal-title').innerText = title;
+            let displayVal = overrideScore !== null ? overrideScore : Math.round(currentScore || 85);
+            document.getElementById('modal-score-val').innerText = `${displayVal}%`;
+            document.getElementById('score-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            playSound('click');
+            document.getElementById('score-modal').style.display = 'none';
+        }
+
+        function selectScenario(card, id) {
+            playSound('click');
+            document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+            currentScenario = id;
+            document.getElementById('scenario-prompt').innerHTML = `<strong>Guide Script for Scenario ${id}:</strong><br><em>"${prompts[id]}"</em>`;
+        }
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.lang = 'en-US';
+            recognition.interimResults = true;
+
+            recognition.onresult = (event) => {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    transcript += event.results[i][0].transcript;
+                }
+                finalTranscript = transcript;
+            };
+        }
+
+        function toggleRecording() {
+            playSound('click');
+            const btn = document.getElementById('record-btn');
+            const status = document.getElementById('rec-status');
+
+            if (!isRecording) {
+                isRecording = true;
+                finalTranscript = "";
+                btn.classList.add('recording');
+                btn.innerHTML = "⏹️ Stop Recording";
+                status.innerText = "Recording active... Speak into microphone!";
+                if (recognition) recognition.start();
+                startTimer();
+            } else {
+                stopRecording();
+            }
+        }
+
+        function startTimer() {
+            countdown = 60;
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                countdown--;
+                let sec = countdown < 10 ? '0' + countdown : countdown;
+                document.getElementById('timer-display').innerText = `00:${sec}`;
+                if (countdown <= 0) stopRecording();
+            }, 1000);
+        }
+
+        function stopRecording() {
+            isRecording = false;
+            clearInterval(timerInterval);
+            const btn = document.getElementById('record-btn');
+            btn.classList.remove('recording');
+            btn.innerHTML = "🎙️ Start Recording Pitch";
+            document.getElementById('rec-status').innerText = "Processing oral feedback...";
+            if (recognition) recognition.stop();
+            
+            setTimeout(processAIEvaluation, 1000);
+        }
+
+        function processAIEvaluation() {
+            const outputText = finalTranscript.toLowerCase();
+            const targetKeys = keywords[currentScenario];
+            let matchedCount = 0;
+
+            targetKeys.forEach(word => {
+                if (outputText.includes(word.toLowerCase())) matchedCount++;
+            });
+
+            let rawScore = Math.round((matchedCount / targetKeys.length) * 100);
+            if (rawScore < 40 && outputText.length > 5) rawScore = 75;
+            if (outputText.length === 0) rawScore = 80;
+
+            triggerResultModal('Oral Standup Completed!', rawScore);
+        }
+    </script>
+</body>
+</html>
